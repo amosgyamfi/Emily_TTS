@@ -5,8 +5,16 @@ from openai import OpenAI
 # Page configuration
 st.set_page_config(page_title="Emily TTS", layout="wide")
 
-# Initialize OpenAI client with API key from environment variables
-client = OpenAI()  # OpenAI client will automatically use OPENAI_API_KEY from environment
+# UI Components
+st.title("Emily TTS")
+
+# API Key input in sidebar
+openai_api_key = st.sidebar.text_input("OpenAI API Key", type="password")
+
+# Initialize OpenAI client with API key from user input
+client = None
+if openai_api_key:
+    client = OpenAI(api_key=openai_api_key)
 
 def generate_speech(text, voice, tone):
     # Create file in current working directory
@@ -21,9 +29,6 @@ def generate_speech(text, voice, tone):
         response.stream_to_file(output_path)
     
     return str(output_path)
-
-# UI Components
-st.title("Emily TTS")
 
 # Text input
 text_input = st.text_area(
@@ -50,6 +55,13 @@ with col2:
 
 # Generate button
 if st.button("Generate Speech"):
-    with st.spinner("Generating speech..."):
-        audio_file = generate_speech(text_input, voice_input, tone_input)
-        st.audio(audio_file, format="audio/mp3")
+    if not openai_api_key:
+        st.error("Please enter your OpenAI API key in the sidebar.")
+    else:
+        with st.spinner("Generating speech..."):
+            try:
+                audio_file = generate_speech(text_input, voice_input, tone_input)
+                st.audio(audio_file, format="audio/mp3")
+            except Exception as e:
+                st.error(f"Error generating speech: {str(e)}")
+                st.info("Make sure your API key has access to the TTS features.")
