@@ -30,6 +30,10 @@ def generate_speech(text, voice, tone):
     
     return str(output_path)
 
+# Store audio path in session state
+if 'audio_path' not in st.session_state:
+    st.session_state.audio_path = None
+
 # Text input
 text_input = st.text_area(
     "Text to convert to speech",
@@ -61,7 +65,22 @@ if st.button("Generate Speech"):
         with st.spinner("Generating speech..."):
             try:
                 audio_file = generate_speech(text_input, voice_input, tone_input)
-                st.audio(audio_file, format="audio/mp3")
+                st.session_state.audio_path = audio_file
+                st.success("Speech generated successfully!")
             except Exception as e:
                 st.error(f"Error generating speech: {str(e)}")
                 st.info("Make sure your API key has access to the TTS features.")
+
+# Display audio and download button if available
+if st.session_state.audio_path:
+    st.subheader("Generated Audio")
+    st.audio(st.session_state.audio_path, format="audio/mp3")
+    
+    # Add download button
+    with open(st.session_state.audio_path, "rb") as file:
+        st.download_button(
+            label="Download MP3",
+            data=file,
+            file_name="emily_tts_speech.mp3",
+            mime="audio/mp3"
+        )
